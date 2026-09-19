@@ -1,0 +1,6 @@
+﻿*.log
+*.img
+*.iso
+qemukey
+qemukey.pub
+config.env
