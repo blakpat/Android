@@ -11,4 +11,4 @@ git clone "${REPO_URL}" ~/docker-android
 cd ~/docker-android
 git checkout "${BRANCH}"
 
-./setup.sh
+cd docker-on-dex && ./setup.sh
