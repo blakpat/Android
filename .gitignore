@@ -1,6 +1,8 @@
-﻿*.log
+*.log
 *.img
 *.iso
 qemukey
 qemukey.pub
 config.env
+.DS_Store
+Thumbs.db

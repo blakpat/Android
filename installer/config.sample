@@ -1,0 +1,17 @@
+# Directorio de instalacion de la VM
+export INSTALLATION_DIR="$HOME/alpine"
+
+# Firmware UEFI de QEMU
+export FIRMWARE=$PREFIX/share/qemu/edk2-x86_64-code.fd
+
+# Servidor DNS
+export DNS_SERVER=8.8.8.8
+
+# Tamano del disco virtual (8GB recomendado para Docker + Grafana + Portainer)
+export DISK_SIZE=8G
+
+# Clave temporal de root
+export ROOT_PASSWORD=Secret123
+
+# Imagen Alpine Linux v3.22 (x86_64)
+export ALPINE_ISO_URL=https://dl-cdn.alpinelinux.org/alpine/v3.22/releases/x86_64/alpine-virt-3.22.1-x86_64.iso

@@ -1,90 +1,107 @@
-﻿# Docker & Containers on Android (Termux / Dex)
+# 🐳 Docker on Android (Termux / Samsung DeX)
 
-Ejecución de Docker, Portainer y Grafana en dispositivos Android (Samsung DeX, tablets y móviles) sin necesidad de acceso root.
-
----
-
-## 🏗 Arquitectura
-
-Debido a que el kernel de Android no expone cgroups ni soporte nativo de contenedores para usuarios no-root:
-
-1. **Termux (Host Android ARM64):** Gestiona la emulación y herramientas CLI.
-2. **QEMU (Emulador x86_64 TCG):** Proporciona una máquina virtual ligera con 2 cores y 2 GB RAM.
-3. **Alpine Linux v3.22 (Guest x86_64):** Sistema operativo invitado optimizado, seguro y con mínimo consumo de RAM.
-4. **Docker Daemon (dockerd):** Ejecuta contenedores estándar compatibles con arquitectura x86_64 (amd64).
-5. **Wrappers CLI:** Permite usar docker y docker-compose directamente desde la terminal de Termux de forma transparente mediante SSH interno.
+Entorno completo y automatizado para ejecutar Docker, Portainer y Grafana sobre dispositivos Android (ARM64) sin necesidad de acceso root.
 
 ---
 
-## 🚀 Requisitos Previos
+## 🏗 Arquitectura del Sistema
 
-- Dispositivo Android con arquitectura arch64 (mínimo 4 GB RAM recomendado).
-- [Termux](https://github.com/termux/termux-app/releases) instalado desde F-Droid o GitHub.
-- Mínimo 10 GB de almacenamiento libre.
+El kernel estándar de Android para usuarios no-root no provee soporte nativo para `cgroups` ni namespaces completos requeridos por Docker. Este proyecto implementa una arquitectura multicapa altamente optimizada:
+
+```
++-------------------------------------------------------------+
+|                     Android (ARM64)                         |
+|  +-------------------------------------------------------+  |
+|  |             Termux (Host CLI & Wrappers)              |  |
+|  |  +-------------------------------------------------+  |  |
+|  |  |           QEMU v10 (x86_64 TCG Engine)          |  |  |
+|  |  |  +-------------------------------------------+  |  |  |
+|  |  |  |      Alpine Linux v3.22 (Guest OS)        |  |  |  |
+|  |  |  |  +-------------------------------------+  |  |  |  |
+|  |  |  |  |         Docker Daemon (dockerd)     |  |  |  |  |
+|  |  |  |  |  +-------------------------------+  |  |  |  |  |
+|  |  |  |  |  | Portainer (:9000)             |  |  |  |  |  |
+|  |  |  |  |  | Grafana (:3000) + Persistence |  |  |  |  |  |
+|  |  |  |  |  +-------------------------------+  |  |  |  |  |
+|  +--+--+--+----------------------------------+--+--+--+--+  |
++-------------------------------------------------------------+
+```
 
 ---
 
-## 📦 Instalación Rápida
+## 📂 Estructura del Proyecto
 
-1. Clona este repositorio dentro de Termux:
-   `ash
-   git clone https://github.com/blakpat/Android.git ~/docker-android
-   cd ~/docker-android
-   `
+```text
+Android/
+├── bin/                    # Wrappers CLI transparentes para Termux
+│   ├── docker              # Wrapper 'docker' hacia la VM
+│   ├── docker-compose      # Wrapper 'docker-compose'
+│   ├── docker-start.sh     # Inicio en segundo plano (tmux)
+│   ├── docker-stop.sh      # Apagado limpio y seguro
+│   └── docker-console.sh   # Consola interactiva
+├── installer/              # Aprovisionamiento y scripts de instalacion
+│   ├── answerfile          # Automatizacion para setup-alpine
+│   ├── config.sample       # Parametros configurables (RAM, disco, ISO)
+│   ├── debug-install.sh    # Modo depuracion
+│   ├── install.sh          # Ejecutor de instalacion
+│   ├── installqemu.expect  # Script expect para automatizar teclado
+│   └── termux-setup.sh     # Script rapido 1-line
+├── vm/                     # Configuracion de la maquina virtual
+│   ├── startqemu.sh        # Comando de arranque QEMU con reenvio de puertos
+│   └── ssh2qemu.sh         # Conexion SSH directa
+├── setup.sh                # Instalador principal 1-click
+├── .gitignore              # Proteccion contra fugas de claves o imagenes
+├── LICENSE                 # Licencia MIT
+└── README.md               # Documentacion completa
+```
 
-2. Ejecuta el asistente de instalación:
-   `ash
-   chmod +x *.sh bin/*
-   ./termux-setup.sh
-   ./install.sh
-   `
+---
 
-3. Instala los wrappers en el PATH de Termux:
-   `ash
-   cp bin/* /bin/
-   chmod +x /bin/docker*
-   `
+## 🚀 Instalacion Rapida en Termux
 
-4. Añade los alias a tu ~/.bashrc:
-   `ash
-   cat << 'EOF' >> ~/.bashrc
-   alias dstart='docker-start.sh'
-   alias dstop='docker-stop.sh'
-   alias dconsole='docker-console.sh'
-   alias dstatus='docker ps'
-   EOF
-   source ~/.bashrc
-   `
+En la app Termux de tu tablet o telefono:
+
+```bash
+pkg update -y && pkg install -y git
+git clone https://github.com/blakpat/Android.git ~/docker-android
+cd ~/docker-android
+chmod +x setup.sh bin/* installer/*.sh vm/*.sh
+./setup.sh
+```
 
 ---
 
 ## 🛠 Comandos de Control
 
-| Comando / Alias | Descripción |
+Una vez instalado, reinicia Termux o ejecuta `source ~/.bashrc`. Dispones de los siguientes alias:
+
+| Comando | Descripcion |
 |---|---|
-| dstart | Inicia la máquina virtual Docker en segundo plano (sesión tmux docker-vm). |
-| dstop | Apaga limpiamente la VM y el daemon de Docker. |
-| dconsole | Abre la consola interactiva de la máquina virtual (Alpine). |
-| dstatus | Muestra los contenedores en ejecución (docker ps). |
-| docker ... | Ejecuta cualquier comando Docker estándar transparente desde Termux. |
-| docker-compose ... | Ejecuta docker-compose sobre la VM. |
+| `dstart` | Enciende la maquina virtual Docker en segundo plano (tmux: `docker-vm`). |
+| `dstatus` | Muestra los contenedores corriendo (`docker ps`). |
+| `dconsole` | Abre la sesion directa de la maquina virtual Alpine. |
+| `dstop` | Apaga limpiamente la VM y el daemon Docker. |
+| `docker <cmd>` | Ejecuta comandos nativos de Docker de forma transparente. |
+| `docker-compose` | Ejecuta docker-compose dentro del guest. |
 
 ---
 
-## 🌐 Servicios Preconfigurados y Puertos
+## 🌐 Servicios y Mapeo de Puertos
 
-Los puertos están redirigidos automáticamente entre la VM y el navegador de la tablet:
+Todos los puertos de la VM estan redirigidos a `localhost` en el navegador de Android:
 
-- **Portainer CE:** http://localhost:9000
-- **Grafana OSS:** http://localhost:3000 (Usuario: dmin, Password: dmin)
-- **Puertos de desarrollo:** 8000, 8080
-- **SSH Interno VM:** localhost:2222
+- **Portainer CE:** `http://localhost:9000`
+- **Grafana OSS:** `http://localhost:3000` (Login inicial: `admin` / `admin`)
+- **Puertos de desarrollo:** `8000`, `8080`
+- **SSH Guest Interno:** `localhost:2222`
 
 ---
 
-## 📊 Ejemplo: Levantar Grafana con Persistencia
+## 📊 Despliegue de Grafana con Persistencia
 
-`ash
+Para levantar Grafana con volumen persistente y plugins de monitoreo:
+
+```bash
 docker run -d \
   -p 3000:3000 \
   --name=grafana \
@@ -93,18 +110,20 @@ docker run -d \
   -e GF_SECURITY_ADMIN_USER=admin \
   -e GF_SECURITY_ADMIN_PASSWORD=admin \
   -e GF_USERS_ALLOW_SIGN_UP=false \
+  -e GF_INSTALL_PLUGINS=grafana-clock-panel,marcusolsson-json-datasource,redis-datasource \
   grafana/grafana-oss:latest
-`
+```
 
 ---
 
-## 🔒 Seguridad
+## 🔒 Seguridad y Buenas Practicas
 
-- Acceso por clave privada SSH dedicada (qemukey) restringida a localhost:2222.
-- El disco virtual (lpine.img) y las claves privadas no deben subirse a repositorios públicos (.gitignore preconfigurado).
+- **Sin elevacion Root:** No altera particiones del sistema Android ni compromete el dispositivo.
+- **Aislamiento por clave SSH:** Solo conexiones locales mediante clave privada efimera (`qemukey`).
+- **Seguridad en Git:** `.gitignore` preconfigurado para evitar subir claves privadas o volumenes de datos.
 
 ---
 
 ## 📄 Licencia
 
-MIT License.
+Este proyecto esta bajo la Licencia MIT.
