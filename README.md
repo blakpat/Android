@@ -4,7 +4,7 @@ Entorno completo y automatizado para ejecutar Docker, Portainer y Grafana sobre 
 
 ---
 
-## 🏗 Arquitectura del Sistema
+## Arquitectura del Sistema
 
 El kernel estándar de Android para usuarios no-root no provee soporte nativo para `cgroups` ni namespaces completos requeridos por Docker. Este proyecto implementa una arquitectura multicapa altamente optimizada:
 
@@ -57,7 +57,7 @@ Android/
 
 ---
 
-## 🚀 Instalacion Rapida en Termux
+##  Instalacion Rapida en Termux
 
 En la app Termux de tu tablet o telefono:
 
@@ -71,7 +71,7 @@ chmod +x setup.sh bin/* installer/*.sh vm/*.sh
 
 ---
 
-## 🛠 Comandos de Control
+## Comandos de Control
 
 Una vez instalado, reinicia Termux o ejecuta `source ~/.bashrc`. Dispones de los siguientes alias:
 
@@ -86,7 +86,7 @@ Una vez instalado, reinicia Termux o ejecuta `source ~/.bashrc`. Dispones de los
 
 ---
 
-## 🌐 Servicios y Mapeo de Puertos
+## Servicios y Mapeo de Puertos
 
 Todos los puertos de la VM estan redirigidos a `localhost` en el navegador de Android:
 
@@ -97,7 +97,7 @@ Todos los puertos de la VM estan redirigidos a `localhost` en el navegador de An
 
 ---
 
-## 📊 Despliegue de Grafana con Persistencia
+## Despliegue de Grafana con Persistencia
 
 Para levantar Grafana con volumen persistente y plugins de monitoreo:
 
@@ -116,7 +116,7 @@ docker run -d \
 
 ---
 
-## 🔒 Seguridad y Buenas Practicas
+## Seguridad y Buenas Practicas
 
 - **Sin elevacion Root:** No altera particiones del sistema Android ni compromete el dispositivo.
 - **Aislamiento por clave SSH:** Solo conexiones locales mediante clave privada efimera (`qemukey`).
@@ -124,6 +124,6 @@ docker run -d \
 
 ---
 
-## 📄 Licencia
+## Licencia
 
 Este proyecto esta bajo la Licencia MIT.
